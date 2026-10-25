@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hash Code Generator Tool</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.container {
+    max-width: 650px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+}
+
+h1 {
+    text-align: center;
+    color: #2563eb;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin: 18px 0 8px;
+    font-weight: bold;
+}
+
+textarea, select, input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.generate {
+    width: 100%;
+    margin-top: 20px;
+    background: #2563eb;
+    color: white;
+}
+
+.generate:hover {
+    background: #1d4ed8;
+}
+
+.copy {
+    background: #16a34a;
+    color: white;
+    margin-top: 10px;
+}
+
+.clear {
+    background: #e2e8f0;
+    color: #1e293b;
+    margin-top: 10px;
+}
+
+.result {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.result textarea {
+    min-height: 100px;
+    background: white;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.message {
+    margin-top: 12px;
+    color: #15803d;
+    font-size: 14px;
+}
+
+footer {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 25px;
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+        margin: 10px auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Hash Code Generator</h1>
+    <p class="subtitle">
+        Generate secure hash codes from your text
+    </p>
+
+    <label for="inputText">Enter Your Text</label>
+    <textarea id="inputText"
+        placeholder="Type your text or password here..."></textarea>
+
+    <label for="algorithm">Select Hash Algorithm</label>
+    <select id="algorithm">
+        <option value="SHA-256">SHA-256</option>
+        <option value="SHA-1">SHA-1</option>
+        <option value="SHA-384">SHA-384</option>
+        <option value="SHA-512">SHA-512</option>
+    </select>
+
+    <button class="generate" onclick="generateHash()">
+        Generate Hash
+    </button>
+
+    <div class="result">
+        <label for="hashOutput">Generated Hash Code</label>
+        <textarea id="hashOutput"
+            placeholder="Your hash will appear here..."
+            readonly></textarea>
+
+        <button class="copy" onclick="copyHash()">
+            Copy Hash
+        </button>
+
+        <button class="clear" onclick="clearAll()">
+            Clear All
+        </button>
+
+        <div id="message" class="message" role="status"></div>
+    </div>
+
+    <footer>
+        Hash Generator Tool | Free Online Utility
+    </footer>
+</div>
+
+<script>
+async function generateHash() {
+    const text = document.getElementById("inputText").value;
+    const algorithm = document.getElementById("algorithm").value;
+    const output = document.getElementById("hashOutput");
+    const message = document.getElementById("message");
+
+    message.textContent = "";
+
+    if (!text) {
+        output.value = "";
+        message.textContent = "Please enter some text first.";
+        message.style.color = "#dc2626";
+        return;
+    }
+
+    if (!window.crypto || !window.crypto.subtle) {
+        message.textContent =
+            "Please open this tool using HTTPS or localhost.";
+        message.style.color = "#dc2626";
+        return;
+    }
+
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text);
+
+        const hashBuffer = await crypto.subtle.digest(
+            algorithm,
+            data
+        );
+
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+        output.value = hashArray
+            .map(byte => byte.toString(16).padStart(2, "0"))
+            .join("");
+
+        message.textContent = "Hash generated successfully!";
+        message.style.color = "#15803d";
+    } catch (error) {
+        output.value = "";
+        message.textContent = "Unable to generate hash.";
+        message.style.color = "#dc2626";
+    }
+}
+
+async function copyHash() {
+    const output = document.getElementById("hashOutput");
+    const message = document.getElementById("message");
+
+    if (!output.value) {
+        message.textContent = "Generate a hash first.";
+        message.style.color = "#dc2626";
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(output.value);
+        message.textContent = "Hash copied to clipboard!";
+        message.style.color = "#15803d";
+    } catch (error) {
+        output.select();
+        const copied = document.execCommand("copy");
+        message.textContent = copied
+            ? "Hash copied to clipboard!"
+            : "Please select and copy the hash manually.";
+        message.style.color = copied ? "#15803d" : "#dc2626";
+    }
+}
+
+function clearAll() {
+    document.getElementById("inputText").value = "";
+    document.getElementById("hashOutput").value = "";
+    document.getElementById("message").textContent = "";
+}
+</script>
+
+</body>
+</html>
